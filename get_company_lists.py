@@ -18,5 +18,23 @@ amex_list = pd.read_csv(AMEX_URL)
 #%%
 companies_list = pd.concat([nyse_list, nasdaq_list, amex_list], ignore_index=True)
 companies_list = companies_list.sort_values('MarketCap', ascending=False)
-
+companies_list = companies_list.reset_index(drop=True)
+#%%
 companies_list.head()
+
+#%% Eliminate foreign companies
+is_domestic = companies_list['ADR TSO'].isna()
+domestic_idxs = companies_list.index[is_domestic == True].tolist()
+
+domestic_list = companies_list.iloc[domestic_idxs]
+domestic_list = domestic_list.reset_index(drop=True)
+
+#%% Eliminate utilities and financial stocks
+is_financial = domestic_list['Sector'] == 'Finance'
+is_utilities = domestic_list['Sector'] == 'Public Utilities'
+
+
+sector_idxs = domestic_list.index[~(is_financial | is_utilities)].tolist()
+sector_list = domestic_list.iloc[sector_idxs]
+
+#%% Filter stocks with duplicate symbols
