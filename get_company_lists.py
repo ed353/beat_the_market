@@ -3,13 +3,17 @@
 
 import urllib
 import pandas as pd
+import datetime
 
 #%%
 NYSE_URL='https://www.nasdaq.com/screening/companies-by-industry.aspx?exchange=NYSE&render=download'
 NASDAQ_URL='https://www.nasdaq.com/screening/companies-by-industry.aspx?exchange=NASDAQ&render=download'
 AMEX_URL='https://www.nasdaq.com/screening/companies-by-industry.aspx?exchange=AMEX&render=download'
+#%%
+currdate = datetime.datetime.now()
+date_str = str(currdate.year) + str(currdate.month).zfill(2) + str(currdate.day).zfill(2)
 
-OUTPUT_FILENAME='symbol_list.txt'
+OUTPUT_FILENAME='symbol_list_{}.txt'.format(date_str)
 
 #%%
 nyse_list = pd.read_csv(NYSE_URL)

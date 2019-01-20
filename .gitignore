@@ -142,3 +142,6 @@ tags
 [._]*.un~
 
 # End of https://www.gitignore.io/api/vim,python
+
+# output files
+symbol_list_*.txt
