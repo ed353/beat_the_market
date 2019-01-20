@@ -145,3 +145,7 @@ tags
 
 # output files
 symbol_list_*.txt
+*.json
+
+# sandbox scripts
+*_sandbox.py
