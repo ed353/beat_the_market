@@ -6,32 +6,40 @@ import glob
 import random
 from time import sleep
 import json
-
 from lxml import html
-import requests
 
 from collections import OrderedDict
 
+from scraping import Scraper
+
 #%%
-def get_summary_data(ticker):
+import warnings
+warnings.filterwarnings("ignore")
 
-    # TODO: move requests to separate function
-    # parse from main quote page
+
+#%%
+def request_main_quote(scraper, ticker):
     url = "http://finance.yahoo.com/quote/%s?p=%s"%(ticker,ticker)
-    # response = requests.get(url, verify=False)
-    response = get_request(url, verify=False)
-    # print ("Parsing %s"%(url))
+    response = scraper.get_request(url, verify=False)
+    return response
 
-    sleep(3)
+def request_other_details(scraper, ticker):
+    url = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/{0}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com".format(ticker)
+    response = scraper.get_request(url)
+    return response
 
-    parser = html.fromstring(response.text)
+#%%
+def get_summary_data(scraper, ticker):
+
+    main_response = request_main_quote(scraper, ticker)
+    sleep(2)
+
+    parser = html.fromstring(main_response.text)
     summary_table = parser.xpath('//div[contains(@data-test,"summary-table")]//tr')
     summary_data = OrderedDict()
 
     # get other details from secondary link
-    other_details_json_link = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/{0}?formatted=true&lang=en-US&region=US&modules=summaryProfile%2CfinancialData%2CrecommendationTrend%2CupgradeDowngradeHistory%2Cearnings%2CdefaultKeyStatistics%2CcalendarEvents&corsDomain=finance.yahoo.com".format(ticker)
-    # summary_json_response = requests.get(other_details_json_link)
-    summary_json_response = get_request(other_details_json_link)
+    summary_json_response = request_other_details(scraper, ticker)
 
     try:
         json_loaded_summary =  json.loads(summary_json_response.text)
@@ -57,73 +65,6 @@ def get_summary_data(ticker):
         print ("Failed to parse json response")
         return None
 
-#%%
-def get_proxies():
-    ''' Grab a list of 10 elite proxies from free-proxy-list.net
-    '''
-    url = 'https://free-proxy-list.net/'
-    response = requests.get(url)
-    parser = html.fromstring(response.text)
-    proxies = set()
-    n_proxies = 0
-    i_proxy = 0
-
-    while n_proxies < 10:
-        i = parser.xpath('//tbody/tr')[i_proxy]
-        if i.xpath('.//td[5][contains(text(),"elite")]'):
-            #Grabbing IP and corresponding PORT
-            proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
-            proxies.add(proxy)
-            n_proxies += 1
-        i_proxy += 1
-
-    return proxies
-
-#%%
-user_agent_list = [
-   #Chrome
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 5.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-    #Firefox
-    'Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)',
-    'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
-    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)',
-    'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko',
-    'Mozilla/5.0 (Windows NT 6.2; WOW64; Trident/7.0; rv:11.0) like Gecko',
-    'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
-    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0)',
-    'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko',
-    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)',
-    'Mozilla/5.0 (Windows NT 6.1; Win64; x64; Trident/7.0; rv:11.0) like Gecko',
-    'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)',
-    'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)',
-    'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)'
-]
-
-def get_random_user_agent():
-    user_agent = random.choice(user_agent_list)
-    #Set the headers
-    headers = {'User-Agent': user_agent}
-    return headers
-
-#%%
-def get_request(url, **kwargs):
-    ''' Wrapper for request.get using a random proxy and user agent.
-    '''
-    headers = get_random_user_agent()
-    proxy = random.choice(proxies)
-    response = requests.get(url, headers=headers,
-        proxies={"http": proxy, "https": proxy},
-        **kwargs)
-    return response
 
 #%% get list of symbols to download
 symbol_lists = glob.glob('symbol_list_*.txt')
@@ -135,23 +76,23 @@ with open(symbol_list_txt_file, 'r') as f:
 
 symbols = [s.rstrip('\n') for s in symbols]
 
-#%% get list of proxies to use
-proxies = list(get_proxies()) #TODO: refresh list of proxies every 10 minutes
+#%% initialize a scraper
+scraper = Scraper()
 
 #%% download financial data from URLs
 for idx, symbol in enumerate(symbols):
-    print('Downloading information for {}'.format(symbol))
     ticker = symbol.lower()
     output_json = os.path.join('/home/emily/data/btm', '{}.json'.format(ticker))
 
     if os.path.exists(output_json):
         continue
 
-    summary_data = get_summary_data(ticker)
+    print('Downloading information for {}'.format(symbol))
+    summary_data = get_summary_data(scraper, ticker)
 
     if summary_data is not None:
         with open(output_json, 'w') as f:
             json.dump(summary_data, f)
 
     if idx % 10 == 0 and idx > 0:
-        sleep(random.randint(10, 20))
+        sleep(random.randint(5, 10))
