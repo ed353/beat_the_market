@@ -20,11 +20,17 @@ dates = df['Date']
 min_date = dates.min()
 max_date = dates.max()
 
+
+min_date
+#%%
+type(max_date)
+max_date = pd.Timestamp.today()
+
 #%%
 import yfinance as yf
 
 # Get the data for the stock Apple by specifying the stock ticker, start date, and end date
-data = yf.download('AAPL', dates.min(), dates.max())
+data = yf.download('AAPL', dates.min(), max_date)
 
 # Plot the close prices
 import matplotlib.pyplot as plt
