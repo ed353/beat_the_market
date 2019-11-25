@@ -12,7 +12,7 @@ def preprocess_dates(df):
 
 #%%
 # TODO: get latest csv from data directory
-df = pd.read_csv('data/play_money_Transactions_20191026-001345.CSV', header=1)
+df = pd.read_csv('data/play_money_Transactions_20191124-193624.CSV', header=1)
 preprocess_dates(df)
 
 df['Price'] = df['Price'].replace('[\$,]', '', regex=True).astype(float)
@@ -36,6 +36,9 @@ exercises = df.loc[df['Action'] == 'Exchange or Exercise']
 
 exercise_symbols = exercises['Symbol'].to_list()
 
+print(exercises)
+print(exercise_symbols)
+
 #%%
 def parse_option_symbol(option_symbol):
     symbol, date, strike_price, strategy = option_symbol.split(' ')
@@ -46,8 +49,12 @@ def parse_option_symbol(option_symbol):
 
 
 
-#%%
+#%% TODO: loop over all exercises
 ex_sym = exercise_symbols[0]
+print(ex_sym)
+
+ex_sym = exercises['Symbol'].values[0]
+print(ex_sym)
 
 #%%
 option_purchase = df.loc[df['Symbol'] == ex_sym].loc[df['Action'] != 'Exchange or Exercise']
@@ -63,7 +70,29 @@ exercise_purchase = df.iloc[0:(option_purchase.index[0])].loc[df['Symbol'] == sy
 
 assert exercise_purchase['Amount'].to_list()[-1] == -buy_total
 
+print(buy_total)
 
+def get_exercise_amount(exercise, all_transactions_df):
+
+    assert len(exercise) == 1
+
+    ex_sym = exercise['Symbol'].values[0]
+    option_purchase = all_transactions_df.loc[all_transactions_df['Symbol'] == ex_sym].loc[all_transactions_df['Action'] != 'Exchange or Exercise']
+    amount_paid = option_purchase['Amount'].to_list()[0]
+
+    symbol, date, strike, strategy = parse_option_symbol(ex_sym)
+
+    num_contracts = option_purchase['Quantity'].to_list()[0]
+    buy_total = strike * num_contracts * 100
+
+    # confirm buy total with subsequent trade
+    exercise_purchase = df.iloc[0:(option_purchase.index[0])].loc[df['Symbol'] == symbol].loc[df['Price'] == strike]
+
+    assert exercise_purchase['Amount'].to_list()[-1] == -buy_total
+
+    return -buy_total
+
+print(get_exercise_amount(exercises, df))
 #%% TODO: find subsequent sell (or position) and subtract
 
 #%% TODO: loop over all exercises and sum
