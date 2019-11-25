@@ -50,33 +50,11 @@ def parse_option_symbol(option_symbol):
 
 
 #%% TODO: loop over all exercises
-ex_sym = exercise_symbols[0]
-print(ex_sym)
-
-ex_sym = exercises['Symbol'].values[0]
-print(ex_sym)
-
-#%%
-option_purchase = df.loc[df['Symbol'] == ex_sym].loc[df['Action'] != 'Exchange or Exercise']
-amount_paid = option_purchase['Amount'].to_list()[0]
-
-symbol, date, strike, strategy = parse_option_symbol(ex_sym)
-
-num_contracts = option_purchase['Quantity'].to_list()[0]
-buy_total = strike * num_contracts * 100
-
-#%% confirm buy total with subsequent trade
-exercise_purchase = df.iloc[0:(option_purchase.index[0])].loc[df['Symbol'] == symbol].loc[df['Price'] == strike]
-
-assert exercise_purchase['Amount'].to_list()[-1] == -buy_total
-
-print(buy_total)
-
 def get_exercise_amount(exercise, all_transactions_df):
 
-    assert len(exercise) == 1
+    # assert len(exercise) == 1
 
-    ex_sym = exercise['Symbol'].values[0]
+    ex_sym = exercise['Symbol'] # .values[0]
     option_purchase = all_transactions_df.loc[all_transactions_df['Symbol'] == ex_sym].loc[all_transactions_df['Action'] != 'Exchange or Exercise']
     amount_paid = option_purchase['Amount'].to_list()[0]
 
@@ -92,7 +70,16 @@ def get_exercise_amount(exercise, all_transactions_df):
 
     return -buy_total
 
-print(get_exercise_amount(exercises, df))
+#%%
+for k in range(len(exercises)):
+    print(get_exercise_amount(exercises.iloc[k], df))
+
 #%% TODO: find subsequent sell (or position) and subtract
 
 #%% TODO: loop over all exercises and sum
+total_gain += -1020
+total_gain += 107
+print(total_gain)
+print(total_spent)
+
+print(total_gain/11406)
