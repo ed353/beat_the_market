@@ -1,3 +1,6 @@
+import os
+import glob
+
 import pandas as pd
 from datetime import datetime
 
@@ -10,9 +13,13 @@ def preprocess_dates(df):
     df['Date'] = pd.to_datetime(df['Date'])
 
 
+#%% get latest csv from data directory
+transactions_files = glob.glob(os.path.join('data/*.CSV'))
+transactions_files.sort()
+latest_file = transactions_files[-1]
+
 #%%
-# TODO: get latest csv from data directory
-df = pd.read_csv('data/play_money_Transactions_20191124-193624.CSV', header=1)
+df = pd.read_csv(latest_file, header=1)
 preprocess_dates(df)
 
 df['Price'] = df['Price'].replace('[\$,]', '', regex=True).astype(float)
@@ -20,6 +27,7 @@ df['Amount'] = df['Amount'].replace('[\$,]', '', regex=True).astype(float)
 
 #%%
 option_trades = df.loc[df.Symbol.str.contains('[0-9]{2}/[0-9]{2}/[0-9]{4}').fillna(value=False)]
+option_trades
 
 #%%
 amounts = option_trades['Amount']
@@ -77,9 +85,7 @@ for k in range(len(exercises)):
 #%% TODO: find subsequent sell (or position) and subtract
 
 #%% TODO: loop over all exercises and sum
-total_gain += -1020
+total_gain += -380
 total_gain += 107
 print(total_gain)
 print(total_spent)
-
-print(total_gain/11406)
