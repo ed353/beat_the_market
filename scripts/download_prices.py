@@ -4,7 +4,7 @@ from pandas_datareader import data
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from ingest_csv import preprocess_dates
+from scripts.ingest_csv import preprocess_dates
 
 #%%
 prices_dir = 'prices'

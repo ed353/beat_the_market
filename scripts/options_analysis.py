@@ -3,25 +3,29 @@ import glob
 
 import pandas as pd
 from datetime import datetime
+from utils import preprocess_dates, get_latest_data
 
 #%%
+'''
 def preprocess_dates(df):
     date_col = df['Date']
     f = lambda x: x.split(' as of ')[0]
     df['Date'] = date_col.map(f)
 
     df['Date'] = pd.to_datetime(df['Date'])
-
+'''
 
 #%% get latest csv from data directory
 transactions_files = glob.glob(os.path.join('data/*.CSV'))
 transactions_files.sort()
 latest_file = transactions_files[-1]
 
+
 #%%
 df = pd.read_csv(latest_file, header=1)
 preprocess_dates(df)
 
+#%%
 df['Price'] = df['Price'].replace('[\$,]', '', regex=True).astype(float)
 df['Amount'] = df['Amount'].replace('[\$,]', '', regex=True).astype(float)
 
